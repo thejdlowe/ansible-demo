@@ -6,15 +6,13 @@
       apt:
         update_cache: yes
 
-    - name: install apache2 package
+    - name: install packages
       apt:
-        name: apache2
+        name: "{{ item }}"
         state: latest
-
-    - name: add php support for apache
-      apt:
-        name: libapache2-mod-php
-        state: latest
+      loop:
+        - apache2
+        - libapache2-mod-php
 
     - name: run JD's custom Python script
       my_test:
