@@ -13,6 +13,7 @@
       loop:
         - apache2
         - libapache2-mod-php
+        - nodejs
 
     - name: run JD's custom Python script
       my_test:
@@ -20,16 +21,8 @@
         new: true
       register: jd_response
 
-    - name: Do we need a reboot?
-      stat:
-        path: /var/run/reboot-required
-        get_checksum: no
-      register: reboot_required_file
-
-    - name: Reboot if needed
-      reboot:
-      when: reboot_required_file.stat.exists == true
-
-    - name: Remove dependencies that aren't needed
-      apt:
-        autoremove: yes
+     - name: Install PM2 globally for process management
+      community.general.npm:
+        name: pm2
+        global: true
+        state: present
