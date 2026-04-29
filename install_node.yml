@@ -14,14 +14,18 @@
         - apache2
         - libapache2-mod-php
         - nodejs
+        - npm
+    - name: Verify Node.js version
+      ansible.builtin.command:
+        cmd: node --version
+      register: node_ver
+      changed_when: false
 
-    - name: run JD's custom Python script
-      my_test:
-        name: "hello"
-        new: true
-      register: jd_response
+    - name: Display installed Node.js version
+      ansible.builtin.debug:
+        msg: "Node.js {{ node_ver.stdout }} installed"
 
-     - name: Install PM2 globally for process management
+    - name: Install PM2 globally for process management
       community.general.npm:
         name: pm2
         global: true

@@ -1,3 +1,9 @@
-192.168.76.159
-192.168.65.203
-192.168.72.173
+[servers]
+node1 ansible_host=192.168.76.159
+node2 ansible_host=192.168.65.203
+node3 ansible_host=192.168.68.239
+
+[servers:vars]
+app_user=appuser
+app_port=3000
+app_name=myapp
