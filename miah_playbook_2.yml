@@ -1,0 +1,21 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Check if file exists
+      stat:
+        path: /etc/myapp/config.json
+      register: file_exists
+      failed_when: file_exists.stat.exists == false
+
+    - name: Verify hostname
+      command:
+        cmd: jq ".hostname" /etc/myapp/config.json
+      register: hostname_result
+      failed_when: hostname_result.stdout != "\"{{inventory_hostname}}\""
+
+    - name: Verify prod value
+      command:
+        cmd: jq ".prod" /etc/myapp/config.json
+      register: prod_result
+      failed_when: prod_result.stdout != "\"true\""

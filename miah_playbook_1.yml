@@ -1,6 +1,10 @@
 ---
 - hosts: all
   become: true
+  vars:
+    config:
+      prod: "{{ prod }}"
+      hostname: "{{ inventory_hostname }}"
   tasks:
     - name: Create folder
       file:
@@ -9,6 +13,13 @@
         mode: "0755"
     - name: Copy JSON
       copy:
-        content: "{'prod': {{prod}}, 'hostname': '{{inventory_hostname}}'}"
+        content: "{{ config | to_json }}"
         dest: /etc/myapp/config.json
         force: true
+
+    - name: install packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - jq
