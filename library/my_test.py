@@ -77,6 +77,7 @@ def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         name=dict(type='str', required=True),
+        path=dict(type='str', required=True),
         new=dict(type='bool', required=False, default=False)
     )
 
@@ -106,14 +107,14 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    with open('test.json') as f:
+    with open(module.params['path']) as f:
         s = json.load(f)
 
     # manipulate or modify the state as needed (this is going to be the
     # part where your module will do what it needs to do)
     result['original_message'] = module.params['name']
     result['message'] = 'goodbye'
-    result['JDTEST'] = s
+    result['json_results'] = s
 
     # use whatever logic you need to determine whether or not this module
     # made any modifications to your target

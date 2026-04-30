@@ -18,13 +18,13 @@
         - git
 
     - name: Verify Node.js version
-      ansible.builtin.command:
+      command:
         cmd: node --version
       register: node_ver
       changed_when: false
 
     - name: Display installed Node.js version
-      ansible.builtin.debug:
+      debug:
         msg: "Node.js {{ node_ver.stdout }} installed"
 
     - name: Install PM2 globally for process management
