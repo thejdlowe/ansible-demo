@@ -1,22 +1,17 @@
 ---
 - hosts: all
   become: true
-  vars:
-    config:
-      prod: "{{ prod }}"
-      hostname: "{{ inventory_hostname }}"
   tasks:
     - name: Create folder
       file:
         path: /etc/myapp
         state: directory
         mode: "0755"
-    - name: Copy JSON
-      copy:
-        content: "{{ config | to_json }}"
+    - name: Copy JSON using jinja2
+      template:
+        src: templates/config.j2
         dest: /etc/myapp/config.json
         force: true
-
     - name: install packages
       apt:
         name: "{{ item }}"
