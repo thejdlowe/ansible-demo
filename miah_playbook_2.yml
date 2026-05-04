@@ -8,11 +8,19 @@
       register: file_exists
       failed_when: file_exists.stat.exists == false
 
-    - name: Verify hostname
-      command:
-        cmd: jq ".hostname" /etc/myapp/config.json
-      register: hostname_result
-      failed_when: hostname_result.stdout != "\"{{inventory_hostname}}\""
+    - name: Establish hostname
+      block:
+        - name: Verify hostname
+          command:
+            cmd: jq ".hostname" /etc/myapp/config.json
+          register: hostname_result
+          failed_when: hostname_result.stdout != "\"{{inventory_hostname}}\""
+      rescue:
+        - name: Update hostname if incorrect
+          template:
+            src: templates/config.j2
+            dest: /etc/myapp/config.json
+            force: true
 
     - name: Verify prod value
       command:

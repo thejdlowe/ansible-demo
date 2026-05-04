@@ -7,14 +7,17 @@
         path: /etc/myapp
         state: directory
         mode: "0755"
+      tags: create_folder
     - name: Copy JSON using jinja2
       template:
         src: templates/config.j2
         dest: /etc/myapp/config.json
         force: true
+      tags: copy_json
     - name: install packages
       apt:
         name: "{{ item }}"
         state: latest
       loop:
         - jq
+      tags: install_packages
