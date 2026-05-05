@@ -1,12 +1,12 @@
 [prod_servers]
-node1 ansible_host=192.168.76.159
-node2 ansible_host=192.168.65.203
+node1
+node2 
 
 [prod_servers:vars]
 prod=true
 
 [staging_servers]
-node3 ansible_host=192.168.68.239
+node3
 
 [staging_servers:vars]
 prod=false
