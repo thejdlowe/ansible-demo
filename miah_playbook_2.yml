@@ -28,4 +28,4 @@
       command:
         cmd: jq ".prod" /etc/myapp/config.json
       register: prod_result
-      failed_when: prod_result.stdout != "\"true\""
+      failed_when: prod_result.stdout != "true"
