@@ -2,11 +2,5 @@
 node1
 node2 
 
-[prod_servers:vars]
-prod=true
-
 [staging_servers]
 node3
-
-[staging_servers:vars]
-prod=false
