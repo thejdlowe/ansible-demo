@@ -1,0 +1,27 @@
+- name: Check if file exists
+  block:
+    - name: Does file exist
+      stat:
+        path: /etc/myapp/config.json
+      register: file_exists
+      failed_when: file_exists.stat.exists == false
+  rescue:
+    - name: Rebuild JSON file
+      include_tasks: build_json.yml
+
+- name: Establish hostname
+  block:
+    - name: Verify hostname
+      command:
+        cmd: jq ".hostname" /etc/myapp/config.json
+      register: hostname_result
+      failed_when: hostname_result.stdout != "\"{{inventory_hostname}}\""
+  rescue:
+    - name: Rebuild JSON file
+      include_tasks: build_json.yml
+
+- name: Verify prod value
+  command:
+    cmd: jq ".prod" /etc/myapp/config.json
+  register: prod_result
+  failed_when: prod_result.stdout != "true"

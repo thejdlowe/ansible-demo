@@ -1,0 +1,11 @@
+---
+- name: Initialize Server
+  hosts: all
+  become: true
+  roles:
+    - init_server
+- name: Configure Server
+  hosts: all
+  become: true
+  roles:
+    - configure_server
