@@ -5,12 +5,6 @@
         path: /etc/myapp/config.json
       register: file_exists
       failed_when: file_exists.stat.exists == false
-  rescue:
-    - name: Rebuild JSON file
-      include_tasks: build_json.yml
-
-- name: Establish hostname
-  block:
     - name: Verify hostname
       command:
         cmd: jq ".hostname" /etc/myapp/config.json
