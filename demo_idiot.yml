@@ -1,0 +1,8 @@
+---
+- name: Demo Idiot Playbook
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Be an idiot
+      debug:
+        msg: "{{ 'This is a demo playbook for Ansible.' | to_idiot }}"
