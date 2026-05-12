@@ -2,10 +2,13 @@
 - name: Initialize Server
   hosts: all
   become: true
+  serial: 1
   roles:
     - init_server
+
 - name: Configure Server
   hosts: all
   become: true
+  serial: 1
   roles:
     - configure_server
