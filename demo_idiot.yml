@@ -1,7 +1,7 @@
 ---
 - name: Demo Idiot Playbook
   hosts: localhost
-  become: true
+  become: false
   tasks:
     - name: Be an idiot
       debug:
