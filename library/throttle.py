@@ -65,32 +65,45 @@ def run_module():
                 lineService, lineRequestPerSecond, lineBurstSize = lineSplit
                 lineRequestPerSecond = int(lineRequestPerSecond)
                 lineBurstSize = int(lineBurstSize)
-                deleted = False
+                result['data'][lineService] = {
+                    'requestPerSecond': lineRequestPerSecond,
+                    'burstSize': lineBurstSize
+                }
                 if actionService == lineService:
                     if throttle_action == 'delete':
                         lines.remove(line)
                         result['changed'] = True
-                        deleted = True
+                        del result['data'][lineService]
                     elif throttle_action == 'set':
                         newLine = f"{lineService}:{actionRequestPerSecond}:{actionBurstSize}\n"
                         if lines[lines.index(line)] != newLine:
                             lines[lines.index(line)] = newLine
                             result['changed'] = True
+                            result['data'][lineService] = {
+                                'requestPerSecond': actionRequestPerSecond,
+                                'burstSize': actionBurstSize
+                            }
+                        else:
+                            result['data'][lineService] = {
+                                'requestPerSecond': lineRequestPerSecond,
+                                'burstSize': lineBurstSize
+                            }
                         setUpdate = True
-                        result['data'][lineService] = {
+                    else:
+                         result['data'][lineService] = {
                             'requestPerSecond': lineRequestPerSecond,
                             'burstSize': lineBurstSize
                         }
-                if not deleted:
-                    result['data'][lineService] = {
-                        'requestPerSecond': lineRequestPerSecond,
-                        'burstSize': lineBurstSize
-                    }
+                    
 
     if result['changed'] == False:
         if throttle_action == 'set' and not setUpdate:
             lines.append(f"{throttle_value}\n")
             result['changed'] = True
+            result['data'][actionService] = {
+                'requestPerSecond': actionRequestPerSecond,
+                'burstSize': actionBurstSize
+            }
 
     if result['changed'] == True and module.check_mode == False:
         with open(throttle_path, 'w') as f:
