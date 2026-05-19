@@ -27,12 +27,14 @@ def run_module():
         supports_check_mode=True
     )
 
+    setUpdate = False
+
     throttle_path = module.params['path']
     throttle_force = module.params['force']
     throttle_value = module.params['value']
     throttle_action = module.params['action']
     actionSplit = throttle_value.strip().split(':')
-    actionService = None
+    actionService = actionSplit[0]
     actionBurstSize = None
     actionRequestPerSecond = None
 
@@ -55,44 +57,44 @@ def run_module():
         result['changed'] = True
     
     
-    for line in lines:
+    for line in lines[:]:
         if not line.startswith("#"):
             lineSplit = line.strip().split(':')
             if len(lineSplit) == 3:
                 # service : request per second : burst size
-                service, requestPerSecond, burstSize = lineSplit
-                requestPerSecond = int(requestPerSecond)
-                burstSize = int(burstSize)
-                if actionService == service:
+                lineService, lineRequestPerSecond, lineBurstSize = lineSplit
+                lineRequestPerSecond = int(lineRequestPerSecond)
+                lineBurstSize = int(lineBurstSize)
+                deleted = False
+                if actionService == lineService:
                     if throttle_action == 'delete':
                         lines.remove(line)
                         result['changed'] = True
+                        deleted = True
                     elif throttle_action == 'set':
-                        newLine = f"{service}:{actionRequestPerSecond}:{actionBurstSize}\n"
+                        newLine = f"{lineService}:{actionRequestPerSecond}:{actionBurstSize}\n"
                         if lines[lines.index(line)] != newLine:
                             lines[lines.index(line)] = newLine
                             result['changed'] = True
-                        result['data'][service] = {
-                            'requestPerSecond': requestPerSecond,
-                            'burstSize': burstSize
+                        setUpdate = True
+                        result['data'][lineService] = {
+                            'requestPerSecond': lineRequestPerSecond,
+                            'burstSize': lineBurstSize
                         }
-                if throttle_action != 'delete':
-                    result['data'][service] = {
-                        'requestPerSecond': requestPerSecond,
-                        'burstSize': burstSize
+                if not deleted:
+                    result['data'][lineService] = {
+                        'requestPerSecond': lineRequestPerSecond,
+                        'burstSize': lineBurstSize
                     }
 
     if result['changed'] == False:
-        if throttle_action == 'set':
+        if throttle_action == 'set' and not setUpdate:
             lines.append(f"{throttle_value}\n")
             result['changed'] = True
 
-    if result['changed'] == True:
+    if result['changed'] == True and module.check_mode == False:
         with open(throttle_path, 'w') as f:
             f.writelines("".join(lines))
-
-    if module.check_mode:
-        module.exit_json(**result)
 
     module.exit_json(**result)
 
