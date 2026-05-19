@@ -9,8 +9,8 @@ from ansible.module_utils.basic import AnsibleModule
 
 def run_module():
     module_args = dict(
-        action=dict(type='str', required=True, choices=['get', 'set', 'delete']),
-        value=dict(type='str', required=True),
+        action=dict(type='str', required=False, default='get', choices=['get', 'set', 'delete']),
+        value=dict(type='str', required=False, default=''),
         path=dict(type='str', required=False, default='/etc/myapp/config'),
         force=dict(type='bool', required=False, default=False)
     )
@@ -31,8 +31,23 @@ def run_module():
     throttle_force = module.params['force']
     throttle_value = module.params['value']
     throttle_action = module.params['action']
+    actionSplit = throttle_value.strip().split(':')
+    actionService = None
+    actionBurstSize = None
+    actionRequestPerSecond = None
+
+    if throttle_action == 'set':
+        if len(actionSplit) != 3:
+            module.fail_json(msg="For 'set' action, value must be in the format 'service:requestPerSecond:burstSize'", **result)
+        actionService, actionRequestPerSecond, actionBurstSize = actionSplit
+        actionRequestPerSecond = int(actionRequestPerSecond)
+        actionBurstSize = int(actionBurstSize)
+        if actionRequestPerSecond <= 0 or actionBurstSize <= 0:
+            module.fail_json(msg="requestPerSecond and burstSize must be positive integers", **result)
+        if actionBurstSize > actionRequestPerSecond:
+            module.fail_json(msg="burstSize cannot be greater than requestPerSecond", **result)
     
-    with open(module.params['path'], 'r') as f:
+    with open(throttle_path, 'r') as f:
         lines = f.readlines()
     
     if ansible_message not in lines:
@@ -48,17 +63,32 @@ def run_module():
                 service, requestPerSecond, burstSize = lineSplit
                 requestPerSecond = int(requestPerSecond)
                 burstSize = int(burstSize)
-                result['data'][service] = {
-                    'requestPerSecond': requestPerSecond,
-                    'burstSize': burstSize
-                }
+                if actionService == service:
+                    if throttle_action == 'delete':
+                        lines.remove(line)
+                        result['changed'] = True
+                    elif throttle_action == 'set':
+                        newLine = f"{service}:{actionRequestPerSecond}:{actionBurstSize}\n"
+                        if lines[lines.index(line)] != newLine:
+                            lines[lines.index(line)] = newLine
+                            result['changed'] = True
+                        result['data'][service] = {
+                            'requestPerSecond': requestPerSecond,
+                            'burstSize': burstSize
+                        }
+                if throttle_action != 'delete':
+                    result['data'][service] = {
+                        'requestPerSecond': requestPerSecond,
+                        'burstSize': burstSize
+                    }
 
     if result['changed'] == False:
         if throttle_action == 'set':
             lines.append(f"{throttle_value}\n")
             result['changed'] = True
+
     if result['changed'] == True:
-        with open(module.params['path'], 'w') as f:
+        with open(throttle_path, 'w') as f:
             f.writelines("".join(lines))
 
     if module.check_mode:
