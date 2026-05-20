@@ -3,9 +3,72 @@
 # Copyright: (c) 2018, Terry Jones <terry.jones@example.org>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import (absolute_import, division, print_function)
+import os
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
+
+DOCUMENTATION = r'''
+module: throttle
+
+short_description: This is my test module
+
+version_added: "1.0.0"
+
+description: This is my longer description explaining my test module.
+
+options:
+
+force=dict(type='bool', required=False, default=False)
+
+    action:
+        description: The action to perform on the throttle configuration. Can be 'get', 'set', or 'delete'.
+        required: false
+        type: str
+        default: 'get'
+    
+    value:
+        description: The value to set for the throttle configuration. For 'set' action, it should be in the format 'service:requestPerSecond:burstSize'.
+            For delete action, it should be the service name to delete.
+        required: false
+        type: str
+        default: ''
+
+    path:
+        description: The path to the throttle configuration file.
+        required: false
+        type: str
+        default: '/etc/myapp/config'
+        notes: If the file does not exist, it will be created.
+
+    force:
+        description: Whether or not to ignore the hard limit of 10000 requests per second when setting a new throttle configuration. If true, the module
+            will allow setting a requestPerSecond value greater than 10000, but will issue a warning.
+            If false, the module will fail if requestPerSecond is greater than 10000.
+        required: false
+        type: bool
+        default: false
+
+author:
+    - J.D. Lowe (@thejdlowe)
+'''
+
+RETURN = r'''
+# These are examples of possible return values, and in general should use other names for return values.
+    action:
+        description: The action that was performed.
+        type: str
+        returned: always
+        sample: 'get'
+    data:
+        description: The current throttle configuration for all services, returned as a dictionary where the keys
+            are service names and the values are dictionaries with 'requestPerSecond' and 'burstSize' keys.
+        type: dict
+    changed:
+        description: Whether or not the throttle configuration was changed.
+        type: bool
+        returned: always
+'''
 
 def run_module():
     module_args = dict(
@@ -17,14 +80,15 @@ def run_module():
 
     ansible_message = "# This file is managed by Ansible. Do not edit it manually.\n"
 
-    result = dict(
-        changed=False,
-        data = dict()
-    )
-
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True
+    )
+
+    result = dict(
+        changed=False,
+        action=module.params['action'],
+        data = dict()
     )
 
     setUpdate = False
@@ -56,7 +120,11 @@ def run_module():
             else:
                 module.warn(f"requestPerSecond is greater than {maximum_request_per_second}, but 'force' is enabled, so proceeding anyway")
     
-    with open(throttle_path, 'r') as f:
+    if not os.path.exists(throttle_path):
+        with open(throttle_path, 'w') as f:
+            f.write(ansible_message)
+    
+    with open(throttle_path, 'r+') as f:
         lines = f.readlines()
     
     if ansible_message not in lines:
@@ -116,6 +184,8 @@ def run_module():
         with open(throttle_path, 'w') as f:
             f.writelines("".join(lines))
 
+    if module.check_mode:
+        result["changed"] = False
     module.exit_json(**result)
 
 
