@@ -29,6 +29,8 @@ def run_module():
 
     setUpdate = False
 
+    maximum_request_per_second = 10000
+
     throttle_path = module.params['path']
     throttle_force = module.params['force']
     throttle_value = module.params['value']
@@ -48,6 +50,11 @@ def run_module():
             module.fail_json(msg="requestPerSecond and burstSize must be positive integers", **result)
         if actionBurstSize > actionRequestPerSecond:
             module.fail_json(msg="burstSize cannot be greater than requestPerSecond", **result)
+        if actionRequestPerSecond > maximum_request_per_second:
+            if not throttle_force:
+                module.fail_json(msg=f"requestPerSecond cannot be greater than {maximum_request_per_second}", **result)
+            else:
+                module.warn(f"requestPerSecond is greater than {maximum_request_per_second}, but 'force' is enabled, so proceeding anyway")
     
     with open(throttle_path, 'r') as f:
         lines = f.readlines()
