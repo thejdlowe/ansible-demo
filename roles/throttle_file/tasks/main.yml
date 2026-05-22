@@ -5,7 +5,7 @@
     mode: "0755"
 
 - name: Update throttle file
-  throttle:
+  custom_throttle:
     action: set
     value: "prod:1000:100"
     force: false
