@@ -1,0 +1,12 @@
+- name: Create folder
+  file:
+    path: /etc/myapp
+    state: directory
+    mode: "0755"
+
+- name: Update throttle file
+  throttle:
+    action: set
+    value: "prod:1000:100"
+    force: false
+    overwrite: false

@@ -19,8 +19,6 @@ description: This is my longer description explaining my test module.
 
 options:
 
-force=dict(type='bool', required=False, default=False)
-
     action:
         description: The action to perform on the throttle configuration. Can be 'get', 'set', or 'delete'.
         required: false
@@ -48,6 +46,7 @@ force=dict(type='bool', required=False, default=False)
         required: false
         type: bool
         default: false
+    
 
 author:
     - J.D. Lowe (@thejdlowe)
@@ -75,7 +74,8 @@ def run_module():
         action=dict(type='str', required=False, default='get', choices=['get', 'set', 'delete']),
         value=dict(type='str', required=False, default=''),
         path=dict(type='str', required=False, default='/etc/myapp/config'),
-        force=dict(type='bool', required=False, default=False)
+        force=dict(type='bool', required=False, default=False),
+        overwrite=dict(type='bool', required=False, default=False)
     )
 
     ansible_message = "# This file is managed by Ansible. Do not edit it manually.\n"
@@ -99,6 +99,7 @@ def run_module():
     throttle_force = module.params['force']
     throttle_value = module.params['value']
     throttle_action = module.params['action']
+    throttle_overwrite = module.params['overwrite']
     actionSplit = throttle_value.strip().split(':')
     actionService = actionSplit[0]
     actionBurstSize = None
@@ -169,6 +170,8 @@ def run_module():
                             'requestPerSecond': lineRequestPerSecond,
                             'burstSize': lineBurstSize
                         }
+            else:
+                module.warn(f"Invalid line in throttle configuration file: {line}")
                     
 
     if result['changed'] == False:
