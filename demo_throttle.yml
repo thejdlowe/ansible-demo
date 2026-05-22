@@ -4,4 +4,4 @@
   become: true
   serial: 1
   roles:
-    - throttle
+    - throttle_file
